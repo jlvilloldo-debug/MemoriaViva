@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-xABu5a0u/KKtHZalqJSvv2AKS1Ei/C6QlE+YeHjbbZY=' 'sha256-gP5U5slKue2QhoVj4L6rkc+3npUjxxuGTXkFwye4JvE='; style-src 'sha256-XsuHBuEvkQqFJsfZMTZdk2oUJQHEcdEzsCf/Y71hNz4='; img-src data: blob:; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; connect-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#1D8348">
+<title>Memoria Viva · Campo</title>
+<style>
+:root{
+  --verde:#1D8348; --verde-osc:#145A32; --oliva:#556B2F; --piedra:#7B7D7D; --grafito:#2E3436;
+  --fondo:#F4F6F3; --tarjeta:#FFFFFF; --texto:#1F2421; --suave:#4F5652; --borde:#B4BFB8;
+  --c-cesped:#1D8348; --c-limpieza:#1F6FA8; --c-inhumacion:#2C3E8F; --c-traslado:#7D3C98; --c-reparacion:#A84F0C;
+  --enlace:#166B3A; --foco:#1F2421;
+  --ok:#1D8348; --alerta:#C0661A; --peligro:#B03A2E; --ambar:#B7950B;
+  --radio:16px; --sombra:0 2px 10px rgba(20,40,30,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --fondo:#121614; --tarjeta:#1C2220; --texto:#E8EDEA; --suave:#B3BCB7; --borde:#45514B; --sombra:none;
+    --ok:#3CB371; --enlace:#7DD3A0; --foco:#E8EDEA; }
+  .barra{border-bottom:1px solid #2E6B48}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--fondo);color:var(--texto);font:16px/1.45 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--foco);outline-offset:3px}
+.app{max-width:560px;margin:0 auto;min-height:100vh;padding-bottom:180px}
+.barra{position:sticky;top:0;z-index:5;background:var(--verde-osc);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.barra h1{font-size:17px;margin:0;flex:1;letter-spacing:.2px}
+.barra h1 small{display:block;font-weight:400;font-size:13px;opacity:.85}
+.pill{border-radius:999px;padding:5px 10px;font-size:13px;font-weight:700;white-space:nowrap}
+.pill.on{background:#D5F5E3;color:#145A32}
+.pill.off{background:#FDEBD0;color:#7E4A0E}
+.btn-mini{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:12px;padding:8px 12px;font-size:14px;font-weight:700;min-height:44px;min-width:56px}
+.demo{background:#FEF9E7;color:#5E4D05;font-size:14px;padding:8px 16px;border-bottom:1px solid #F4E3A1}
+@media (prefers-color-scheme: dark){.demo{background:#2A2610;color:#E8D67A;border-color:#4A4220}}
+.contenido{padding:16px}
+.tarjeta{background:var(--tarjeta);border:1px solid var(--borde);border-radius:var(--radio);box-shadow:var(--sombra);padding:16px;margin-bottom:14px}
+h2{font-size:20px;margin:4px 0 12px}
+h3{font-size:16px;margin:0 0 8px}
+.suave{color:var(--suave);font-size:15px}
+/* Perfiles */
+.perfil{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--tarjeta);border:2px solid var(--borde);border-radius:var(--radio);padding:16px;margin-bottom:12px;min-height:72px}
+.perfil:active{transform:scale(.99)}
+.avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:18px;flex:none}
+/* Fichaje */
+.fichaje{display:flex;align-items:center;gap:16px}
+.reloj{flex:1}
+.reloj .grande{font-size:30px;font-weight:700;line-height:1.1}
+.boton-fichar{width:116px;height:116px;border-radius:50%;border:0;color:#fff;font-weight:800;font-size:15px;line-height:1.15;box-shadow:0 6px 16px rgba(0,0,0,.18);flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.boton-fichar.entrar{background:var(--verde)}
+.boton-fichar.salir{background:var(--peligro)}
+.boton-fichar svg{width:30px;height:30px}
+.estado-fichaje{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.punto{width:10px;height:10px;border-radius:50%}
+/* Progreso */
+.progreso{height:12px;background:var(--borde);border-radius:999px;overflow:hidden;margin-top:8px}
+.progreso > div{height:100%;background:var(--verde);border-radius:999px;transition:width .4s}
+.chips{display:flex;gap:8px;margin:4px 0 14px}
+.chip{border:2px solid var(--borde);background:var(--tarjeta);border-radius:999px;padding:8px 16px;font-weight:700;font-size:15px;min-height:48px}
+.chip[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:#fff}
+/* Tareas */
+.tarea{display:flex;width:100%;text-align:left;background:var(--tarjeta);border:1px solid var(--borde);border-radius:var(--radio);box-shadow:var(--sombra);margin-bottom:12px;padding:0;overflow:hidden;min-height:88px}
+.tarea .franja{width:8px;flex:none}
+.tarea .cuerpo{flex:1;padding:14px 14px 14px 12px;display:flex;gap:12px;align-items:flex-start}
+.icono{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff}
+.icono svg{width:24px;height:24px}
+.tarea .titulo{font-weight:700;font-size:16px;margin-bottom:2px}
+.tarea .lugar{font-size:14px;color:var(--suave)}
+.etiquetas{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.etq{font-size:13px;font-weight:700;border-radius:8px;padding:3px 8px}
+.etq.pendiente{background:#EAECEE;color:#424949}
+.etq.en_curso{background:#FCF3CF;color:#7D6608}
+.etq.hecha{background:#D5F5E3;color:#145A32}
+.etq.bloq{background:#FAE5D3;color:#873600}
+.etq.hora{background:transparent;border:1px solid var(--borde);color:var(--suave)}
+.vacio{text-align:center;padding:28px 12px;color:var(--suave)}
+/* Detalle */
+.volver{background:none;border:0;color:var(--enlace);font-weight:700;padding:8px 0;margin-bottom:6px;min-height:48px}
+.cabecera-tarea{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.aviso{border-radius:14px;padding:14px;margin-bottom:14px;font-weight:600;display:flex;gap:10px;align-items:flex-start}
+.aviso svg{width:24px;height:24px;flex:none}
+.aviso.bloq{background:#FAE5D3;color:#6E2C00;border:2px solid #E59866}
+.aviso.ok{background:#D5F5E3;color:#145A32;border:2px solid #82E0AA}
+.paso{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--borde)}
+.paso:first-of-type{border-top:0}
+.num{width:30px;height:30px;border-radius:50%;background:var(--borde);display:grid;place-items:center;font-weight:800;flex:none}
+.num.listo{background:var(--verde);color:#fff}
+.paso .cont{flex:1;min-width:0}
+.boton{border:0;border-radius:14px;padding:14px 18px;font-weight:800;font-size:16px;min-height:52px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.boton svg{width:22px;height:22px}
+.boton.primario{background:var(--verde);color:#fff;width:100%}
+.boton.secundario{background:var(--tarjeta);border:2px solid var(--enlace);color:var(--enlace)}
+.boton.falta{background:var(--tarjeta);border:2px dashed var(--suave);color:var(--texto);width:100%}
+.boton:disabled{background:var(--borde);color:var(--suave);border-color:var(--borde);cursor:not-allowed}
+.foto{display:block;width:100%;max-height:240px;object-fit:cover;border-radius:12px;margin-top:8px;border:1px solid var(--borde)}
+textarea{width:100%;min-height:84px;border:2px solid var(--borde);border-radius:12px;padding:10px;font:inherit;background:var(--tarjeta);color:var(--texto);resize:vertical}
+.fila-dato{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--borde);font-size:15px}
+.fila-dato:last-child{border-bottom:0}
+.fila-dato span:last-child{font-weight:700;text-align:right}
+/* Horas */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.kpi{background:var(--tarjeta);border:1px solid var(--borde);border-radius:14px;padding:12px}
+.kpi .v{font-size:22px;font-weight:800}
+.kpi .l{font-size:13px;color:var(--suave)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--borde)}
+th{font-size:12px;color:var(--suave);text-transform:uppercase;letter-spacing:.4px}
+td.n,th.n{text-align:right}
+/* Navegación inferior */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--tarjeta);border-top:1px solid var(--borde);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+.nav .in{display:flex;max-width:560px;width:100%}
+.nav button{flex:1;border:0;background:none;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;font-weight:700;color:var(--suave);min-height:64px}
+.nav button svg{width:26px;height:26px}
+.nav button[aria-current="page"]{color:var(--verde)}
+/* Aviso flotante */
+.toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--grafito);color:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px);width:520px;z-index:9;box-shadow:0 8px 24px rgba(0,0,0,.25);font-weight:600}
+.toast[hidden]{display:none}
+.toast button{background:none;border:2px solid #fff;color:#fff;border-radius:12px;padding:8px 14px;font-weight:800;flex:none;min-height:48px}
+.toast span{flex:1}
+.oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.pie{text-align:center;font-size:12px;color:var(--suave);padding:8px 16px 20px}
+.enlace{background:none;border:0;color:var(--peligro);font-weight:700;text-decoration:underline;padding:12px;min-height:48px}
+.indicaciones{font-size:17px;line-height:1.5;margin:6px 0 0}
+.etq.alerta{background:#FAE5D3;color:#873600}
+.aviso .accion{display:block;font-weight:400;margin-top:6px}
+.aviso .boton{margin-top:10px;width:100%}
+.hora-foto{font-size:14px;color:var(--suave);margin-top:4px}
+.aviso.atencion{background:#FEF5E7;color:#6E2C00;border:2px solid #F0B27A}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<nav class="nav" id="nav" aria-label="Secciones" hidden><div class="in" id="nav-in"></div></nav>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toast-txt"></span><button id="toast-btn" type="button" hidden>Deshacer</button></div>
+<script>// Lógica pura de la app de campo (sin DOM). Se prueba con node y se inserta en el HTML.
+(function (raiz) {
+  'use strict';
+  var MAX_FOTO = 200000;      // caracteres base64 (~150 KB) por foto (H4: cuidar el espacio del celular)
+  var MAX_FICHAJES = 2000;
+  var MAX_NOTA = 500;
+  var ESTADOS = ['pendiente', 'en_curso', 'hecha'];
+
+  function esEventoValido(e) {
+    return !!e && typeof e === 'object' && (e.tipo === 'entrada' || e.tipo === 'salida') &&
+      typeof e.ts === 'number' && isFinite(e.ts) && e.ts > 0;
+  }
+
+  var MAX_TURNO = 14 * 3600000;   // un turno de más de 14 h se considera olvido y se manda a revisar
+  var TOLERANCIA_FUTURO = 5 * 60000;
+
+  // Arma los turnos respetando el orden en que se marcaron los fichajes.
+  // Devuelve turnos válidos (asignados al día de la entrada) y las horas de cada registro a revisar.
+  function armarTurnos(eventos, ahora) {
+    var r = { turnos: [], anomalias: [], invalidos: 0, abierto: null, vencido: null };
+    if (!Array.isArray(eventos)) return r;
+    var limite = typeof ahora === 'number' && isFinite(ahora) ? ahora : Infinity;
+    var ultimo = -Infinity, abierto = null;
+    for (var i = 0; i < eventos.length; i++) {
+      var e = eventos[i];
+      if (!esEventoValido(e)) { r.invalidos++; continue; }
+      if (e.ts > limite + TOLERANCIA_FUTURO) { r.anomalias.push(e.ts); continue; }
+      if (e.ts < ultimo) {
+        // Reloj atrasado: la salida cierra el turno pero no se suma; la entrada se ignora.
+        if (e.tipo === 'salida' && abierto !== null) { r.anomalias.push(abierto); abierto = null; }
+        else r.anomalias.push(e.ts);
+        continue;
+      }
+      ultimo = e.ts;
+      if (e.tipo === 'entrada') {
+        if (abierto === null) abierto = e.ts;
+        else if (e.ts - abierto > MAX_TURNO) { r.anomalias.push(abierto); abierto = e.ts; }
+        else r.anomalias.push(e.ts);
+      } else if (abierto === null) {
+        r.anomalias.push(e.ts);
+      } else {
+        if (e.ts - abierto > MAX_TURNO) r.anomalias.push(abierto);
+        else r.turnos.push({ ini: abierto, fin: e.ts });
+        abierto = null;
+      }
+    }
+    if (abierto !== null) {
+      if (limite !== Infinity && limite - abierto > MAX_TURNO) { r.anomalias.push(abierto); r.vencido = abierto; }
+      else { r.abierto = abierto; if (limite !== Infinity) r.turnos.push({ ini: abierto, fin: Math.max(abierto, limite), enCurso: true }); }
+    }
+    return r;
+  }
+
+  // Suma los turnos cuya ENTRADA cae dentro de [desde, hasta). Turno en curso cuenta hasta "ahora".
+  function calcularHoras(eventos, desde, hasta, ahora) {
+    var t = armarTurnos(eventos, ahora);
+    var ms = 0, anomalias = t.invalidos;
+    t.turnos.forEach(function (x) { if (x.ini >= desde && x.ini < hasta) ms += x.fin - x.ini; });
+    t.anomalias.forEach(function (ts) { if (ts >= desde && ts < hasta) anomalias++; });
+    return { ms: ms, anomalias: anomalias };
+  }
+
+  function dividirJornada(ms, jornadaHoras) {
+    var min = Math.floor(Math.max(0, Number(ms) || 0) / 60000);
+    var tope = Math.max(0, Number(jornadaHoras) || 0) * 60;
+    return { normalesMin: Math.min(min, tope), extrasMin: Math.max(0, min - tope) };
+  }
+
+  function formatoDuracion(ms) {
+    var min = Math.floor(Math.max(0, Number(ms) || 0) / 60000);
+    var h = Math.floor(min / 60), m = min % 60;
+    return h + ' h ' + (m < 10 ? '0' : '') + m + ' min';
+  }
+
+  function estadoFichaje(eventos, ahora) {
+    return armarTurnos(eventos, ahora).abierto !== null ? 'dentro' : 'fuera';
+  }
+
+  // Hora de una entrada que quedó abierta más de 14 h (olvido de salida), o null.
+  function turnoVencido(eventos, ahora) {
+    return armarTurnos(eventos, ahora).vencido;
+  }
+
+  // Celda CSV que Excel nunca interpreta como fórmula.
+  function csvSeguro(valor) {
+    var s = valor === null || valor === undefined ? '' : String(valor);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+
+  function esFotoValida(v) {
+    if (typeof v !== 'string') return false;
+    var pre = 'data:image/jpeg;base64,';
+    if (v.indexOf(pre) !== 0) return false;
+    var cuerpo = v.slice(pre.length);
+    return cuerpo.length > 0 && cuerpo.length <= MAX_FOTO && /^[A-Za-z0-9+/]+={0,2}$/.test(cuerpo);
+  }
+
+  function puedeCompletar(t) {
+    if (!t || typeof t !== 'object') return { ok: false, motivo: 'Tarea inexistente.' };
+    if (t.judicial) return { ok: false, motivo: 'Caso judicial: no toques esta parcela hasta que Administración avise que llegó la orden del juez.' };
+    if (t.tipo === 'traslado' && t.autorizado !== true) return { ok: false, motivo: 'Falta la autorización firmada de la familia. No hagas el traslado hasta que Administración avise que la tiene.' };
+    if (!t.fotoAntes) return { ok: false, motivo: 'Falta la foto de ANTES.' };
+    if (!t.fotoDespues) return { ok: false, motivo: 'Falta la foto de DESPUÉS.' };
+    return { ok: true, motivo: '' };
+  }
+
+  function propia(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+
+  function sanearUbicacion(u) {
+    if (!u || typeof u !== 'object') return null;
+    var lat = Number(u.lat), lon = Number(u.lon), p = Number(u.precision);
+    if (!isFinite(lat) || !isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+    return { lat: lat, lon: lon, precision: isFinite(p) && p >= 0 ? Math.round(p) : null };
+  }
+
+  // Valida todo lo que viene del almacenamiento local antes de usarlo.
+  function sanearEstado(raw, idsValidos) {
+    if (!raw || typeof raw !== 'object' || raw.version !== 1) return null;
+    var op = typeof raw.operario === 'string' && /^[a-z0-9_-]{1,20}$/.test(raw.operario) ? raw.operario : null;
+    var MIN_TS = Date.UTC(2020, 0, 1), MAX_TS = Date.UTC(2100, 0, 1);
+    var fich = Array.isArray(raw.fichajes) ? raw.fichajes.filter(function (e) { return esEventoValido(e) && e.ts >= MIN_TS && e.ts <= MAX_TS; })
+      .map(function (e) {
+        return { tipo: e.tipo, ts: e.ts, op: typeof e.op === 'string' && /^[a-z0-9_-]{1,20}$/.test(e.op) ? e.op : null };
+      }) : [];
+    if (fich.length > MAX_FICHAJES) fich = fich.slice(fich.length - MAX_FICHAJES);
+    var tareas = Object.create(null);
+    var src = raw.tareas && typeof raw.tareas === 'object' ? raw.tareas : {};
+    (idsValidos || []).forEach(function (id) {
+      if (!propia(src, id)) return;
+      var t = src[id];
+      if (!t || typeof t !== 'object') return;
+      var o = {
+        estado: ESTADOS.indexOf(t.estado) >= 0 ? t.estado : 'pendiente',
+        fotoAntes: esFotoValida(t.fotoAntes) ? t.fotoAntes : null,
+        fotoDespues: esFotoValida(t.fotoDespues) ? t.fotoDespues : null,
+        nota: typeof t.nota === 'string' ? t.nota.slice(0, MAX_NOTA) : '',
+        fin: typeof t.fin === 'number' && isFinite(t.fin) && t.fin > 0 ? t.fin : null,
+        ubicacion: sanearUbicacion(t.ubicacion)
+      };
+      if (o.estado === 'hecha' && (!o.fotoAntes || !o.fotoDespues || o.fin === null)) { o.estado = 'pendiente'; o.fin = null; }
+      tareas[id] = o;
+    });
+    var dia = typeof raw.dia === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.dia) ? raw.dia : null;
+    return { version: 1, operario: op, dia: dia, fichajes: fich, tareas: tareas };
+  }
+
+  var api = {
+    MAX_FOTO: MAX_FOTO, MAX_FICHAJES: MAX_FICHAJES, MAX_NOTA: MAX_NOTA,
+    calcularHoras: calcularHoras, dividirJornada: dividirJornada, formatoDuracion: formatoDuracion,
+    estadoFichaje: estadoFichaje, turnoVencido: turnoVencido, MAX_TURNO: MAX_TURNO, csvSeguro: csvSeguro, esFotoValida: esFotoValida,
+    puedeCompletar: puedeCompletar, sanearEstado: sanearEstado
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else raiz.Logica = Object.freeze(api);
+})(this);
+</script>
+<script>(function () {
+  'use strict';
+  var L = window.Logica;
+  var CLAVE = 'memoriaviva_campo_demo_v1';
+  var JORNADA_HORAS = 8;
+  var MAX_MEGAPIXELES = 40e6;
+  var MSG_ESPACIO = 'No hay espacio en este celular para guardar. No se registró. Avisá a tu encargado.';
+
+  // Si la página está incrustada en otro sitio, no arranca (evita engaños por marcos).
+  if (window.top !== window.self) {
+    document.getElementById('app').textContent = 'Esta aplicación no puede abrirse dentro de otra página.';
+    return;
+  }
+
+  // ---------- Datos de ejemplo (todos ficticios) ----------
+  var OPERARIOS = [
+    { id: 'op1', nombre: 'Marcos R.', area: 'Mantenimiento de parque', color: '#1D8348' },
+    { id: 'op2', nombre: 'Lucía P.', area: 'Inhumaciones', color: '#2C3E8F' },
+    { id: 'op3', nombre: 'Diego S.', area: 'Traslados y reducciones', color: '#7D3C98' }
+  ];
+  var TIPOS = {
+    cesped: { nombre: 'Césped', color: 'var(--c-cesped)', icono: 'hoja' },
+    limpieza: { nombre: 'Limpieza', color: 'var(--c-limpieza)', icono: 'gota' },
+    inhumacion: { nombre: 'Inhumación', color: 'var(--c-inhumacion)', icono: 'pala' },
+    traslado: { nombre: 'Traslado', color: 'var(--c-traslado)', icono: 'flechas' },
+    reparacion: { nombre: 'Reparación', color: 'var(--c-reparacion)', icono: 'llave' }
+  };
+  var TAREAS = [
+    { id: 't1', op: 'op1', tipo: 'cesped', titulo: 'Corte de césped', lugar: 'Sector A · Parcelas A-01 a A-20', hora: '08:00', instrucciones: 'Cortar a 5 cm. No apoyar la máquina sobre las placas. Retirar el pasto cortado de las placas.' },
+    { id: 't2', op: 'op1', tipo: 'limpieza', titulo: 'Limpieza de placas', lugar: 'Sector B · Fila 3', hora: '10:00', instrucciones: 'Limpiar con agua y cepillo suave. Sin productos abrasivos.' },
+    { id: 't3', op: 'op1', tipo: 'reparacion', titulo: 'Reponer placa dañada', lugar: 'Sector C · Parcela C-14', hora: '11:30', instrucciones: 'Retirar la placa rota y colocar la nueva (en depósito, rotulada C-14). Nivelar.' },
+    { id: 't4', op: 'op1', tipo: 'cesped', titulo: 'Bordeado de caminos', lugar: 'Jardín de los Bancos', hora: '14:00', instrucciones: 'Bordear ambos lados del camino principal y el perímetro de los bancos.' },
+    { id: 't5', op: 'op2', tipo: 'inhumacion', titulo: 'Preparar parcela para inhumación', lugar: 'Sector B · Parcela B-07 · Lugar 2 de 3', hora: '10:30', instrucciones: 'Abrir la parcela respetando el lugar 2. Colocar tablones y lona en el contorno. Avisar a Administración al terminar.' },
+    { id: 't6', op: 'op2', tipo: 'limpieza', titulo: 'Acondicionar zona de ceremonia', lugar: 'Capilla · Explanada', hora: '09:30', instrucciones: 'Barrer, ordenar sillas y verificar el sonido.' },
+    { id: 't7', op: 'op2', tipo: 'inhumacion', titulo: 'Cierre y reposición de césped', lugar: 'Sector A · Parcela A-09', hora: '15:00', instrucciones: 'Cerrar, compactar y reponer los panes de césped. Limpiar la placa.' },
+    { id: 't8', op: 'op3', tipo: 'traslado', titulo: 'Reducción y traslado a cinerario', lugar: 'Parcela A-05 → Cinerario 2', hora: '09:00', autorizado: true, instrucciones: 'Autorización de la familia verificada por Administración. Anotar el número de urna en la nota.' },
+    { id: 't9', op: 'op3', tipo: 'traslado', titulo: 'Traslado de parcela a nicho', lugar: 'Parcela C-02 → Nicho N-18', hora: '11:00', autorizado: false, instrucciones: 'Pendiente de la autorización firmada de la familia.' },
+    { id: 't10', op: 'op3', tipo: 'traslado', titulo: 'Reducción de restos', lugar: 'Sector B · Parcela B-11', hora: '13:00', autorizado: true, judicial: true, instrucciones: 'Parcela con caso judicial abierto.' }
+  ];
+  var IDS = TAREAS.map(function (t) { return t.id; });
+
+  // ---------- Íconos (trazos fijos, nunca datos del usuario) ----------
+  var ICONOS = {
+    hoja: 'M5 19c8 0 14-6 14-14C11 5 5 11 5 19zm0 0l7-7',
+    gota: 'M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z',
+    pala: 'M14 4l6 6M17 7l-8 8m-3-1l4 4-3 3-4-4z',
+    flechas: 'M4 8h13l-3-3M20 16H7l3 3',
+    llave: 'M14 7a4 4 0 1 0 3 3l4 4-3 3-4-4a4 4 0 0 1-3-3z',
+    camara: 'M4 8h3l2-3h6l2 3h3v11H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+    lista: 'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
+    reloj: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
+    entrar: 'M10 17l5-5-5-5M15 12H3M14 4h5v16h-5',
+    salir: 'M14 17l5-5-5-5M19 12H7M10 4H5v16h5',
+    candado: 'M6 11h12v10H6zM8 11V7a4 4 0 0 1 8 0v4',
+    check: 'M5 12l5 5 9-10',
+    alerta: 'M12 3l10 18H2zM12 10v4M12 18h.01'
+  };
+  function icono(nombre) {
+    var ns = 'http://www.w3.org/2000/svg';
+    var s = document.createElementNS(ns, 'svg');
+    s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor');
+    s.setAttribute('stroke-width', '2'); s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round');
+    s.setAttribute('aria-hidden', 'true');
+    var p = document.createElementNS(ns, 'path'); p.setAttribute('d', ICONOS[nombre] || ''); s.appendChild(p);
+    return s;
+  }
+
+  // ---------- Construcción segura del DOM (solo textContent, nunca HTML armado con texto) ----------
+  function el(tag, props) {
+    var n = document.createElement(tag);
+    props = props || {};
+    Object.keys(props).forEach(function (k) {
+      var v = props[k];
+      if (k === 'class') n.className = v;
+      else if (k === 'text') n.textContent = v;
+      else if (k === 'on') Object.keys(v).forEach(function (ev) { n.addEventListener(ev, v[ev]); });
+      else if (k === 'attrs') Object.keys(v).forEach(function (a) { n.setAttribute(a, v[a]); });
+      else if (k === 'bg') n.style.background = v;
+    });
+    for (var i = 2; i < arguments.length; i++) {
+      var h = arguments[i];
+      if (h === null || h === undefined || h === false) continue;
+      n.appendChild(typeof h === 'string' ? document.createTextNode(h) : h);
+    }
+    return n;
+  }
+
+  // ---------- Fechas ----------
+  function hoyStr(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function inicioDia(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+  function finDia(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime(); }
+  function hhmm(ts) { var d = new Date(ts); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  function fechaCorta(d) { return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); }
+  var DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+  // ---------- Estado y almacenamiento ----------
+  function estadoVacio() { return { version: 1, operario: null, dia: hoyStr(), fichajes: [], tareas: Object.create(null) }; }
+  var estado = estadoVacio();
+
+  function revalidarHechas() {
+    // Una tarea bloqueada (judicial o sin autorización) nunca puede figurar como hecha.
+    TAREAS.forEach(function (b) {
+      var d = estado.tareas[b.id];
+      if (d && d.estado === 'hecha' && bloqueo(b)) { d.estado = 'pendiente'; d.fin = null; }
+    });
+  }
+  function cargar() {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(CLAVE) || 'null'); } catch (e) { raw = null; }
+    var s = L.sanearEstado(raw, IDS);
+    if (s) {
+      var ids = OPERARIOS.map(function (o) { return o.id; });
+      if (s.operario && ids.indexOf(s.operario) < 0) s.operario = null;
+      estado = s;
+      revisarCambioDeDia();
+      revalidarHechas();
+    }
+  }
+  function revisarCambioDeDia() {
+    if (estado.dia !== hoyStr()) { estado.tareas = Object.create(null); estado.dia = hoyStr(); return true; }
+    return false;
+  }
+  // Devuelve true solo si quedó guardado. Quien llama decide qué hacer si falla.
+  function guardar() {
+    try { localStorage.setItem(CLAVE, JSON.stringify(estado)); return true; }
+    catch (e) { return false; }
+  }
+  function datosTarea(id) {
+    var t = estado.tareas[id];
+    if (!t) { t = { estado: 'pendiente', fotoAntes: null, fotoDespues: null, nota: '', fin: null, ubicacion: null }; estado.tareas[id] = t; }
+    return t;
+  }
+  function tareaCompleta(base) { return Object.assign({}, base, datosTarea(base.id)); }
+  function operarioActual() { return OPERARIOS.filter(function (o) { return o.id === estado.operario; })[0] || null; }
+  function bloqueo(base) {
+    var r = L.puedeCompletar(Object.assign({}, base, { fotoAntes: 'x', fotoDespues: 'x' }));
+    return r.ok ? null : r.motivo;
+  }
+  function misTareas() {
+    return TAREAS.filter(function (t) { return t.op === estado.operario; }).sort(function (a, b) {
+      var ba = bloqueo(a) ? 1 : 0, bb = bloqueo(b) ? 1 : 0;   // bloqueadas al final
+      if (ba !== bb) return ba - bb;
+      return a.hora < b.hora ? -1 : 1;
+    });
+  }
+  function fichajesOperario() { return estado.fichajes.filter(function (f) { return f.op === estado.operario; }); }
+  function estaDentro() { return L.estadoFichaje(fichajesOperario(), Date.now()) === 'dentro'; }
+
+  // ---------- Aviso flotante (se cierra al tocarlo o al cambiar de pantalla) ----------
+  var temporizadorAviso = null;
+  function ocultarAviso() { clearTimeout(temporizadorAviso); document.getElementById('toast').hidden = true; }
+  function aviso(texto, deshacer) {
+    var t = document.getElementById('toast'), b = document.getElementById('toast-btn');
+    document.getElementById('toast-txt').textContent = texto;
+    var nb = b.cloneNode(true); b.parentNode.replaceChild(nb, b);
+    nb.hidden = !deshacer;
+    if (deshacer) nb.addEventListener('click', function (ev) { ev.stopPropagation(); ocultarAviso(); deshacer(); });
+    t.hidden = false;
+    clearTimeout(temporizadorAviso);
+    temporizadorAviso = setTimeout(ocultarAviso, deshacer ? 8000 : 5000);
+  }
+  document.getElementById('toast').addEventListener('click', ocultarAviso);
+
+  // ---------- Navegación ----------
+  var vista = { pantalla: 'tareas', tareaId: null, filtro: 'pendientes' };
+  function ir(pantalla, tareaId) {
+    ocultarAviso();
+    vista.pantalla = pantalla; vista.tareaId = tareaId || null;
+    render(); window.scrollTo(0, 0);
+  }
+  function cambiarOperario() {
+    if (estaDentro() && !window.confirm('Tenés la entrada marcada. ¿Salir igual? Tu turno sigue abierto hasta que marques la salida.')) return;
+    estado.operario = null; guardar(); ir('tareas');
+  }
+
+  function barra() {
+    var op = operarioActual();
+    var enLinea = navigator.onLine;
+    return el('header', { class: 'barra' },
+      el('h1', null, 'Memoria Viva · Campo', el('small', { text: op ? op.nombre : 'Cementerio Parque (demo)' })),
+      el('span', { class: 'pill ' + (enLinea ? 'on' : 'off'), attrs: { title: enLinea ? 'El celular tiene señal' : 'Sin señal: se guarda en este celular' } }, enLinea ? 'Con señal' : 'Sin señal'),
+      op ? el('button', { class: 'btn-mini', attrs: { type: 'button', 'aria-label': 'Salir y cambiar de operario' }, on: { click: cambiarOperario } }, 'Salir') : null);
+  }
+  function bandaDemo(completa) {
+    return el('div', { class: 'demo', attrs: { role: 'note' } }, completa
+      ? 'Demo con datos ficticios. Todo se guarda solo en este celular y no se envía a ningún servidor. En la versión final se sincroniza con Administración.'
+      : 'Demo · datos ficticios, guardados solo en este celular');
+  }
+
+  // ---------- Pantalla: elegir operario ----------
+  function pantallaPerfil() {
+    var c = el('main', { class: 'contenido' },
+      el('h2', { text: '¿Quién sos?' }),
+      el('p', { class: 'suave', text: 'En la versión final cada operario entra con su usuario. En la demo, elegí un perfil.' }));
+    OPERARIOS.forEach(function (o) {
+      var n = TAREAS.filter(function (t) { return t.op === o.id; }).length;
+      c.appendChild(el('button', { class: 'perfil', attrs: { type: 'button' }, on: { click: function () { estado.operario = o.id; guardar(); vista.filtro = 'pendientes'; ir('tareas'); } } },
+        el('span', { class: 'avatar', bg: o.color, text: o.nombre.charAt(0) }),
+        el('span', null, el('strong', { text: o.nombre }), el('br'), el('span', { class: 'suave', text: o.area + ' · ' + n + ' tareas hoy' }))));
+    });
+    c.appendChild(el('div', { class: 'pie' },
+      el('button', { class: 'enlace', attrs: { type: 'button' }, on: { click: function () {
+        if (window.confirm('¿Borrar todos los datos de la demo en este celular?')) {
+          try { localStorage.removeItem(CLAVE); } catch (e) { /* sin almacenamiento disponible */ }
+          estado = estadoVacio();
+          render(); aviso('Datos de la demo borrados.');
+        }
+      } } }, 'Borrar datos de la demo')));
+    return c;
+  }
+
+  // ---------- Fichaje ----------
+  function tarjetaFichaje() {
+    var ahora = Date.now(), d = new Date();
+    var ev = fichajesOperario();
+    var dentro = L.estadoFichaje(ev, ahora) === 'dentro';
+    var vencido = L.turnoVencido(ev, ahora);
+    var horas = L.calcularHoras(ev, inicioDia(d), finDia(d), ahora);
+    var ultimos = ev.filter(function (f) { return f.ts >= inicioDia(d) && f.ts <= ahora; }).sort(function (a, b) { return a.ts - b.ts; });
+    var ultimo = ultimos[ultimos.length - 1];
+    var cont = el('div');
+    if (vencido) {
+      cont.appendChild(el('div', { class: 'aviso atencion', attrs: { role: 'alert' } }, icono('alerta'),
+        el('span', null, 'Te quedó una entrada del ' + fechaCorta(new Date(vencido)) + ' a las ' + hhmm(vencido) + ' sin salida.',
+          el('span', { class: 'accion', text: 'Esas horas no se suman: avisá a tu encargado para que las corrija. Hoy marcá tu entrada normalmente.' }))));
+    }
+    cont.appendChild(el('section', { class: 'tarjeta fichaje', attrs: { 'aria-label': 'Fichaje' } },
+      el('div', { class: 'reloj' },
+        el('div', { class: 'estado-fichaje' }, el('span', { class: 'punto', bg: dentro ? 'var(--ok)' : 'var(--piedra)' }), dentro ? 'Trabajando' : 'Fuera de turno'),
+        el('div', { class: 'grande', text: L.formatoDuracion(horas.ms) }),
+        el('div', { class: 'suave', text: 'trabajado hoy' + (ultimo ? ' · último registro ' + hhmm(ultimo.ts) : '') })),
+      el('button', { class: 'boton-fichar ' + (dentro ? 'salir' : 'entrar'), attrs: { type: 'button', 'aria-label': dentro ? 'Marcar salida' : 'Marcar entrada' }, on: { click: function () { fichar(dentro ? 'salida' : 'entrada'); } } },
+        icono(dentro ? 'salir' : 'entrar'), dentro ? 'MARCAR SALIDA' : 'MARCAR ENTRADA')));
+    return cont;
+  }
+  function fichar(tipo, alTerminar) {
+    var reg = { tipo: tipo, ts: Date.now(), op: estado.operario };
+    estado.fichajes.push(reg);
+    if (!guardar()) { estado.fichajes.pop(); aviso(MSG_ESPACIO); return; }
+    render();
+    aviso((tipo === 'entrada' ? 'Entrada' : 'Salida') + ' registrada a las ' + hhmm(reg.ts) + '.', function () {
+      var i = estado.fichajes.indexOf(reg);
+      if (i >= 0) {
+        estado.fichajes.splice(i, 1);
+        if (!guardar()) { estado.fichajes.splice(i, 0, reg); aviso(MSG_ESPACIO); return; }
+        render(); aviso('Registro deshecho.');
+      }
+    });
+    if (alTerminar) alTerminar();
+  }
+
+  // ---------- Pantalla: tareas ----------
+  function tarjetaTarea(base) {
+    var t = tareaCompleta(base), tipo = TIPOS[base.tipo], bloq = t.estado !== 'hecha' ? bloqueo(base) : null;
+    var nombreEstado = bloq ? 'No hacer · ' + (base.judicial ? 'judicial' : 'bloqueada')
+      : { pendiente: 'Pendiente', en_curso: 'En curso', hecha: 'Hecha ' + (t.fin ? hhmm(t.fin) : '') }[t.estado];
+    return el('button', { class: 'tarea', attrs: { type: 'button', 'aria-label': base.titulo + '. ' + base.lugar + '. ' + base.hora + '. ' + nombreEstado }, on: { click: function () { ir('detalle', base.id); } } },
+      el('span', { class: 'franja', bg: tipo.color }),
+      el('span', { class: 'cuerpo' },
+        el('span', { class: 'icono', bg: tipo.color }, icono(bloq ? 'candado' : tipo.icono)),
+        el('span', null,
+          el('span', { class: 'titulo', text: base.titulo }), el('br'),
+          el('span', { class: 'lugar', text: base.lugar }),
+          el('span', { class: 'etiquetas' },
+            el('span', { class: 'etq hora', text: base.hora }),
+            el('span', { class: 'etq ' + (bloq ? 'bloq' : t.estado), text: nombreEstado })))));
+  }
+  function pantallaTareas() {
+    var lista = misTareas();
+    var hechas = lista.filter(function (b) { return datosTarea(b.id).estado === 'hecha'; }).length;
+    var main = el('main', { class: 'contenido' }, tarjetaFichaje());
+    var barraP = el('div');
+    barraP.style.width = (lista.length ? Math.round(hechas * 100 / lista.length) : 0) + '%';
+    main.appendChild(el('section', { class: 'tarjeta', attrs: { 'aria-label': 'Avance del día' } },
+      el('h3', { text: 'Tareas de hoy' }),
+      el('div', { class: 'suave', text: hechas + ' de ' + lista.length + ' hechas' }),
+      el('div', { class: 'progreso', attrs: { role: 'progressbar', 'aria-label': 'Tareas hechas', 'aria-valuemin': '0', 'aria-valuemax': String(lista.length), 'aria-valuenow': String(hechas), 'aria-valuetext': hechas + ' de ' + lista.length } }, barraP)));
+    var chips = el('div', { class: 'chips', attrs: { role: 'group', 'aria-label': 'Filtrar tareas' } });
+    [['pendientes', 'Por hacer'], ['hechas', 'Hechas'], ['todas', 'Todas']].forEach(function (f) {
+      chips.appendChild(el('button', { class: 'chip', attrs: { type: 'button', 'aria-pressed': String(vista.filtro === f[0]) }, on: { click: function () { vista.filtro = f[0]; render(); } } }, f[1]));
+    });
+    main.appendChild(chips);
+    var filtradas = lista.filter(function (b) {
+      var e = datosTarea(b.id).estado;
+      return vista.filtro === 'todas' || (vista.filtro === 'hechas' ? e === 'hecha' : e !== 'hecha');
+    });
+    if (!filtradas.length) main.appendChild(el('div', { class: 'vacio tarjeta', text: vista.filtro === 'hechas' ? 'Todavía no hay tareas hechas.' : '¡Listo! No quedan tareas pendientes.' }));
+    filtradas.forEach(function (b) { main.appendChild(tarjetaTarea(b)); });
+    return main;
+  }
+
+  // ---------- Fotos: se reducen, se re-codifican (se borran metadatos y GPS de la cámara) y se sellan con fecha ----------
+  function procesarFoto(archivo, sello) {
+    return new Promise(function (resolver, rechazar) {
+      if (!archivo || !/^image\/(jpeg|png|webp)$/i.test(archivo.type || '')) { rechazar(new Error('Ese archivo no es una foto (JPG, PNG o WEBP). Sacala de nuevo con la cámara.')); return; }
+      if (archivo.size > 25 * 1024 * 1024) { rechazar(new Error('La foto es demasiado pesada. Sacala de nuevo con la cámara.')); return; }
+      var url = URL.createObjectURL(archivo), img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        if (img.naturalWidth * img.naturalHeight > MAX_MEGAPIXELES) { rechazar(new Error('La foto es demasiado grande. Sacala de nuevo con la cámara.')); return; }
+        var intentos = [[1024, 0.6], [800, 0.55], [640, 0.5], [480, 0.45]];
+        for (var i = 0; i < intentos.length; i++) {
+          var lado = intentos[i][0], esc = Math.min(1, lado / Math.max(img.naturalWidth, img.naturalHeight));
+          var w = Math.max(1, Math.round(img.naturalWidth * esc)), h = Math.max(1, Math.round(img.naturalHeight * esc));
+          var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+          var cx = cv.getContext('2d'); cx.drawImage(img, 0, 0, w, h);
+          var alto = Math.max(28, Math.round(Math.min(w, h) * 0.09));
+          cx.fillStyle = 'rgba(0,0,0,0.6)'; cx.fillRect(0, h - alto, w, alto);
+          cx.fillStyle = '#fff'; cx.font = 'bold ' + Math.round(alto * 0.5) + 'px sans-serif'; cx.textBaseline = 'middle';
+          cx.fillText(sello, 10, h - alto / 2, w - 20);
+          var dato = cv.toDataURL('image/jpeg', intentos[i][1]);
+          if (L.esFotoValida(dato)) { resolver(dato); return; }
+        }
+        rechazar(new Error('No se pudo achicar la foto. Probá sacarla de nuevo.'));
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); rechazar(new Error('No se pudo leer la foto. Sacala de nuevo con la cámara.')); };
+      img.src = url;
+    });
+  }
+  function pedirFoto(base, campo) {
+    var inp = el('input', { class: 'oculto', attrs: { type: 'file', accept: 'image/jpeg,image/png,image/webp', capture: 'environment', 'aria-hidden': 'true', tabindex: '-1' } });
+    inp.addEventListener('change', function () {
+      var f = inp.files && inp.files[0];
+      inp.remove();
+      if (!f) return;
+      var ahora = new Date();
+      var sello = fechaCorta(ahora) + '/' + ahora.getFullYear() + ' ' + hhmm(ahora.getTime()) + ' · ' + base.lugar.split(' · ').pop() + ' · ' + (campo === 'fotoAntes' ? 'ANTES' : 'DESPUÉS');
+      procesarFoto(f, sello).then(function (dato) {
+        var d = datosTarea(base.id), previo = { foto: d[campo], estado: d.estado };
+        d[campo] = dato;
+        if (d.estado === 'pendiente') d.estado = 'en_curso';
+        if (!guardar()) { d[campo] = previo.foto; d.estado = previo.estado; aviso(MSG_ESPACIO); return; }
+        render();   // la confirmación es el paso en verde con ✓, sin aviso que tape la pantalla
+      }).catch(function (e) { aviso(e.message); });
+    });
+    document.body.appendChild(inp);
+    inp.click();
+  }
+
+  // ---------- Ubicación: solo al marcar la tarea como hecha ----------
+  function pedirUbicacion() {
+    return new Promise(function (resolver) {
+      if (!('geolocation' in navigator)) { resolver(null); return; }
+      navigator.geolocation.getCurrentPosition(function (p) {
+        resolver({ lat: p.coords.latitude, lon: p.coords.longitude, precision: Math.round(p.coords.accuracy) });
+      }, function () { resolver(null); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+    });
+  }
+
+  // ---------- Pantalla: detalle de tarea ----------
+  function pantallaDetalle() {
+    var base = TAREAS.filter(function (t) { return t.id === vista.tareaId && t.op === estado.operario; })[0];
+    if (!base) { vista.pantalla = 'tareas'; return pantallaTareas(); }
+    var d = datosTarea(base.id), t = tareaCompleta(base), tipo = TIPOS[base.tipo];
+    var hecha = d.estado === 'hecha';
+    var bloq = hecha ? null : bloqueo(base);
+    var main = el('main', { class: 'contenido' },
+      el('button', { class: 'volver', attrs: { type: 'button' }, on: { click: function () { ir('tareas'); } } }, '← Volver a mis tareas'),
+      el('div', { class: 'cabecera-tarea' },
+        el('span', { class: 'icono', bg: tipo.color }, icono(tipo.icono)),
+        el('div', null, el('h2', { text: base.titulo }), el('div', { class: 'suave', text: tipo.nombre + ' · ' + base.hora }))));
+    main.appendChild(el('section', { class: 'tarjeta' },
+      el('div', { class: 'suave', text: 'Lugar' }), el('div', { class: 'indicaciones' }, el('strong', { text: base.lugar })),
+      el('div', { class: 'suave', text: 'Qué hacer' }), el('p', { class: 'indicaciones', text: base.instrucciones })));
+
+    if (bloq) {
+      main.appendChild(el('div', { class: 'aviso bloq', attrs: { role: 'alert' } }, icono('candado'),
+        el('span', null, 'No hacer esta tarea. ' + bloq,
+          el('span', { class: 'accion', text: 'Seguí con tu próxima tarea. Si alguien te pide hacerla, llamá a Administración.' }))));
+      return main;
+    }
+    if (hecha) {
+      main.appendChild(el('div', { class: 'aviso ok' }, icono('check'),
+        el('span', null, 'Tarea registrada a las ' + hhmm(d.fin) + '.',
+          el('span', { class: 'accion', text: 'En la demo queda guardada en este celular hasta el final del día. En la versión final queda como constancia en el servidor.' }))));
+      main.appendChild(el('section', { class: 'tarjeta' },
+        el('div', { class: 'fila-dato' }, el('span', { text: 'Ubicación al terminar' }),
+          d.ubicacion
+            ? el('span', { text: d.ubicacion.lat.toFixed(5) + ', ' + d.ubicacion.lon.toFixed(5) + (d.ubicacion.precision !== null ? ' (±' + d.ubicacion.precision + ' m)' : '') })
+            : el('span', { class: 'etq alerta', text: 'Sin ubicación · avisá a tu encargado' })),
+        d.nota ? el('div', { class: 'fila-dato' }, el('span', { text: 'Nota' }), el('span', { text: d.nota })) : null,
+        el('h3', { text: 'Antes' }), el('img', { class: 'foto', attrs: { src: d.fotoAntes, alt: 'Foto de antes' } }),
+        el('h3', { text: 'Después' }), el('img', { class: 'foto', attrs: { src: d.fotoDespues, alt: 'Foto de después' } })));
+      return main;
+    }
+    if (!estaDentro()) {
+      main.appendChild(el('div', { class: 'aviso atencion', attrs: { role: 'alert' } }, icono('reloj'),
+        el('span', null, 'Primero marcá tu entrada.',
+          el('span', { class: 'accion', text: 'Las tareas se registran dentro de tu horario de trabajo.' }),
+          el('button', { class: 'boton primario', attrs: { type: 'button' }, on: { click: function () { fichar('entrada'); } } }, icono('entrar'), 'MARCAR ENTRADA AHORA'))));
+      return main;
+    }
+
+    function paso(n, listo, titulo, ayuda, extra, idTitulo) {
+      return el('div', { class: 'paso' },
+        el('span', { class: 'num' + (listo ? ' listo' : ''), text: listo ? '✓' : String(n), attrs: { 'aria-hidden': 'true' } }),
+        el('div', { class: 'cont' }, el('strong', { text: titulo + (listo ? ' · listo' : ''), attrs: idTitulo ? { id: idTitulo } : {} }), el('div', { class: 'suave', text: ayuda }), extra));
+    }
+    var nota = el('textarea', { attrs: { maxlength: String(L.MAX_NOTA), placeholder: 'Ej.: número de urna, material usado, algo para avisar…', 'aria-labelledby': 'titulo-nota' } });
+    nota.value = d.nota || '';
+    nota.addEventListener('change', function () {
+      var previa = d.nota; d.nota = nota.value.slice(0, L.MAX_NOTA);
+      if (!guardar()) { d.nota = previa; aviso(MSG_ESPACIO); }
+    });
+
+    main.appendChild(el('section', { class: 'tarjeta' },
+      paso(1, !!d.fotoAntes, 'Foto de ANTES', 'Sacala antes de empezar.',
+        el('div', null,
+          d.fotoAntes ? el('img', { class: 'foto', attrs: { src: d.fotoAntes, alt: 'Foto de antes' } }) : null,
+          el('button', { class: 'boton secundario', attrs: { type: 'button' }, on: { click: function () { pedirFoto(base, 'fotoAntes'); } } }, icono('camara'), d.fotoAntes ? 'Repetir foto' : 'Sacar foto de antes'))),
+      paso(2, !!d.fotoDespues, 'Foto de DESPUÉS', 'Sacala con el trabajo terminado.',
+        el('div', null,
+          d.fotoDespues ? el('img', { class: 'foto', attrs: { src: d.fotoDespues, alt: 'Foto de después' } }) : null,
+          el('button', { class: 'boton secundario', attrs: { type: 'button' }, on: { click: function () { pedirFoto(base, 'fotoDespues'); } } }, icono('camara'), d.fotoDespues ? 'Repetir foto' : 'Sacar foto de después'))),
+      paso(3, !!d.nota, 'Nota (opcional)', 'Cualquier dato útil para Administración.', nota, 'titulo-nota')));
+
+    var chequeo = L.puedeCompletar(Object.assign({}, t, { fotoAntes: d.fotoAntes, fotoDespues: d.fotoDespues }));
+    // El botón siempre se puede tocar: si falta algo, dice qué falta.
+    var btn = el('button', { class: 'boton ' + (chequeo.ok ? 'primario' : 'falta'), attrs: { type: 'button' } },
+      icono(chequeo.ok ? 'check' : 'alerta'), el('span', { text: chequeo.ok ? 'MARCAR COMO HECHA' : chequeo.motivo }));
+    btn.addEventListener('click', function () {
+      var c = L.puedeCompletar(Object.assign({}, t, { fotoAntes: d.fotoAntes, fotoDespues: d.fotoDespues }));
+      if (!c.ok) { aviso(c.motivo); return; }
+      btn.disabled = true; btn.lastChild.textContent = 'Guardando ubicación…';
+      var notaPrevia = d.nota;
+      d.nota = nota.value.slice(0, L.MAX_NOTA);
+      pedirUbicacion().then(function (ubic) {
+        d.estado = 'hecha'; d.fin = Date.now(); d.ubicacion = ubic;
+        if (!guardar()) {
+          d.estado = 'en_curso'; d.fin = null; d.ubicacion = null; d.nota = notaPrevia;
+          btn.disabled = false; btn.lastChild.textContent = 'MARCAR COMO HECHA';
+          aviso(MSG_ESPACIO); return;
+        }
+        ir('tareas');
+        aviso(ubic ? 'Tarea registrada a las ' + hhmm(d.fin) + '.'
+          : 'Tarea registrada a las ' + hhmm(d.fin) + ', pero no se pudo guardar dónde estabas. Activá la ubicación del celular y avisá a tu encargado.');
+      });
+    });
+    main.appendChild(btn);
+    main.appendChild(el('p', { class: 'suave', text: 'Al marcarla como hecha se guarda la hora y la ubicación de ese momento. No se sigue tu ubicación en ningún otro momento.' }));
+    return main;
+  }
+
+  // ---------- Pantalla: mis horas ----------
+  function pantallaHoras() {
+    var ev = fichajesOperario(), ahora = Date.now(), hoy = new Date();
+    var filas = [];
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - i);
+      var r = L.calcularHoras(ev, inicioDia(d), finDia(d), ahora);
+      var j = L.dividirJornada(r.ms, JORNADA_HORAS);
+      filas.push({ fecha: d, ms: r.ms, anomalias: r.anomalias, normales: j.normalesMin, extras: j.extrasMin });
+    }
+    var tot = filas.reduce(function (a, f) { return { ms: a.ms + f.ms, extras: a.extras + f.extras }; }, { ms: 0, extras: 0 });
+    var hoyF = filas[filas.length - 1];
+    var main = el('main', { class: 'contenido' }, el('h2', { text: 'Mis horas' }),
+      el('div', { class: 'kpis' },
+        el('div', { class: 'kpi' }, el('div', { class: 'v', text: L.formatoDuracion(hoyF.ms) }), el('div', { class: 'l', text: 'Hoy' })),
+        el('div', { class: 'kpi' }, el('div', { class: 'v', text: L.formatoDuracion(tot.ms) }), el('div', { class: 'l', text: 'Últimos 7 días' })),
+        el('div', { class: 'kpi' }, el('div', { class: 'v', text: L.formatoDuracion(tot.extras * 60000) }), el('div', { class: 'l', text: 'Extras (más de ' + JORNADA_HORAS + ' h en el día)' })),
+        el('div', { class: 'kpi' }, el('div', { class: 'v', text: String(misTareas().filter(function (b) { return datosTarea(b.id).estado === 'hecha'; }).length) }), el('div', { class: 'l', text: 'Tareas hechas hoy' }))));
+    var tbody = el('tbody');
+    filas.slice().reverse().forEach(function (f) {
+      tbody.appendChild(el('tr', null,
+        el('td', { text: DIAS[f.fecha.getDay()] + ' ' + fechaCorta(f.fecha) }),
+        el('td', { class: 'n', text: L.formatoDuracion(f.ms) }),
+        el('td', { class: 'n', text: f.extras ? L.formatoDuracion(f.extras * 60000) : '—' }),
+        el('td', { class: 'n', text: f.anomalias ? '⚠ ' + f.anomalias : '—' })));
+    });
+    main.appendChild(el('section', { class: 'tarjeta' },
+      el('table', null, el('thead', null, el('tr', null, el('th', { text: 'Día' }), el('th', { class: 'n', text: 'Trabajado' }), el('th', { class: 'n', text: 'Extras' }), el('th', { class: 'n', text: 'A revisar' }))), tbody),
+      el('p', { class: 'suave', text: 'Cada turno cuenta en el día en que marcaste la entrada. Si un registro no cierra (por ejemplo, una entrada que quedó más de 14 h sin salida), no se suma y Administración lo revisa. Hoy incluye tu turno en curso hasta ahora.' })));
+    main.appendChild(el('button', { class: 'boton primario', attrs: { type: 'button' }, on: { click: function () { descargarCSV(filas); } } }, 'Descargar mis horas (planilla)'));
+    main.appendChild(el('p', { class: 'suave', text: 'En la demo la hora sale del reloj del celular. En la versión final la pone el servidor, para que nadie pueda adelantar o atrasar el reloj, y el contador la descarga desde Administración.' }));
+    return main;
+  }
+  function descargarCSV(filas) {
+    var op = operarioActual();
+    var lineas = [['Operario', 'Fecha', 'Minutos trabajados', 'Horas', 'Normales (min)', 'Extras (min)', 'Registros a revisar'].map(L.csvSeguro).join(';')];
+    filas.forEach(function (f) {
+      lineas.push([op.nombre, hoyStr(f.fecha), Math.floor(f.ms / 60000), L.formatoDuracion(f.ms), f.normales, f.extras, f.anomalias].map(L.csvSeguro).join(';'));
+    });
+    var blob = new Blob(['﻿' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = el('a', { attrs: { href: url, download: 'horas-' + op.id + '-' + hoyStr() + '.csv' } });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    aviso('Planilla descargada. Se abre con Excel en la computadora.');
+  }
+
+  // ---------- Barra inferior ----------
+  function renderNav() {
+    var nav = document.getElementById('nav'), cont = document.getElementById('nav-in');
+    cont.replaceChildren();
+    if (!estado.operario) { nav.hidden = true; return; }
+    nav.hidden = false;
+    [['tareas', 'Mis tareas', 'lista'], ['horas', 'Mis horas', 'reloj']].forEach(function (b) {
+      var activo = vista.pantalla === b[0] || (b[0] === 'tareas' && vista.pantalla === 'detalle');
+      var attrs = { type: 'button' }; if (activo) attrs['aria-current'] = 'page';
+      cont.appendChild(el('button', { attrs: attrs, on: { click: function () { ir(b[0]); } } }, icono(b[2]), b[1]));
+    });
+  }
+
+  function render() {
+    if (revisarCambioDeDia()) { guardar(); if (vista.pantalla === 'detalle') vista.pantalla = 'tareas'; }
+    var cuerpo;
+    if (!estado.operario) cuerpo = pantallaPerfil();
+    else if (vista.pantalla === 'detalle') cuerpo = pantallaDetalle();
+    else if (vista.pantalla === 'horas') cuerpo = pantallaHoras();
+    else cuerpo = pantallaTareas();
+    document.getElementById('app').replaceChildren(barra(), bandaDemo(!estado.operario), cuerpo);
+    renderNav();
+  }
+
+  cargar();
+  window.addEventListener('online', render);
+  window.addEventListener('offline', render);
+  setInterval(function () { if (vista.pantalla !== 'detalle' && estado.operario) render(); }, 30000);
+  render();
+})();
+</script>
+</body>
+</html>
